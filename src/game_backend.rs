@@ -103,10 +103,6 @@ impl Backend { // Movement
     }
 
     fn merge(&mut self, direction: ShiftDirection) -> bool {
-        // let horo_to_vert = |input: &GridType| -> GridType {
-        //     // let out: GridType = itertools::izip!(..self.grid)
-        //     out
-        // };
         let og_input = self.grid();
 
         match direction {
