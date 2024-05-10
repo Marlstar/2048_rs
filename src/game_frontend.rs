@@ -1,6 +1,7 @@
 use iced::widget::{Row, Column, Button, button, Text, text, Space, themer};
 use iced::{Settings, Color, Program, Alignment, alignment, Background, Theme, Border};
 use iced::border::Radius;
+use iced::{keyboard, Subscription, subscription, Event};
 use crate::game_backend::{self, ShiftDirection, Backend};
 
 mod cell_colours {
@@ -33,6 +34,13 @@ mod cell_colours {
         }
     }
 
+    pub fn get_text_colour(i: usize) -> Color {
+        match i {
+            2 | 4 => from_rgb(119.0, 110.0, 101.0),
+            _ => from_rgb(249.0, 246.0, 242.0)
+        }
+    }
+
     fn C0() -> Color { from_rgb(202.0, 192.0, 179.0) }
     fn C2() -> Color { from_rgb(236.0, 228.0, 218.0) }
     fn C4() -> Color { from_rgb(235.0, 224.0, 200.0) }
@@ -45,7 +53,7 @@ mod cell_colours {
     fn C512() -> Color { from_rgb(230.0, 201.0, 77.0) }
     fn C1024() -> Color { from_rgb(230.0, 198.0, 60.0) }
     fn C2048() -> Color { from_rgb(230.0, 195.0, 40.0) }
-    fn CM() -> Color { from_rgb(191.0, 94.0, 206.0) }
+    fn CM() -> Color { from_rgb(61.0, 58.0, 51.0) }
 }
 
 
@@ -61,14 +69,8 @@ impl Default for RS2048 {
 }
 
 impl RS2048 {
-    fn make_rows(&self) -> [Row<Message>;4] {
-        let mut out = [
-            Row::<Message>::new(),
-            Row::<Message>::new(),
-            Row::<Message>::new(),
-            Row::<Message>::new()
-        ];
-
+    fn make_rows(&self) -> Column<Message> {
+        let mut out = Column::<Message>::new();
         for row in 0..4 {
             let mut r = Row::<Message>::new();
             for col in 0..4 {
@@ -76,14 +78,10 @@ impl RS2048 {
                     self.make_button(self.backend.grid_ref()[row][col])
                 )
             }
-            out[row] = r;
+            out = out.push(r);
         }
         return out;
     }
-    // fn button_coloured_style(&self, i: usize) {
-    //     let des_colour = cell_colours::get_cell_colour(i);
-    //     button::Style::default().with_background(des_colour)
-    // }
     fn coloured_button_style(i:usize) -> impl Fn(&Theme, button::Status) -> button::Style {
         const ROUNDING: u16 = 5;
         move |_theme: &Theme, _status: button::Status| button::Style {
@@ -104,13 +102,21 @@ impl RS2048 {
     fn make_button(&self, i: usize) -> Button<Message> {
         use iced::alignment::{Vertical, Horizontal};
 
-        const SQUARE_BUTTON_SIZE: u16 = 60;
-        const TEXT_SIZE: u16 = 30;
+        const SIZE_MULT: u16 = 3;
 
-        let text = text(i)
+        const SQUARE_BUTTON_SIZE: u16 = 60 * SIZE_MULT;
+        const TEXT_SIZE: u16 = 30 * SIZE_MULT;
+
+        let text = if i > 0 {
+            text(i)
+        }
+        else {
+            text(" ")
+        }
             .vertical_alignment(Vertical::Center)
             .horizontal_alignment(Horizontal::Center)
-            .size(TEXT_SIZE);
+            .size(TEXT_SIZE)
+            .color(cell_colours::get_text_colour(i));
 
         let des_colour = cell_colours::get_cell_colour(i);
 
@@ -131,24 +137,18 @@ impl RS2048 {
 
     }
 
-    pub fn view_(&self) -> Column<Message> {
-        let mut col: Column<Message> = Column::new();
-
-        let rows: [Row<Message>;4] = self.make_rows();
-        for r in rows {
-            col = col.push(r)
-        };
-
-        col
-    }
     pub fn view(&self) -> Column<Message> {
         let mut col: Column<Message> = Column::new();
 
+        let grid = self.make_rows();
+
+        grid
+    }
+    pub fn view_(&self) -> Column<Message> {
+        let mut col: Column<Message> = Column::new();
+
         col.push(
-            Button::new("T")
-                .width(60)
-                .height(60)
-                .style(Self::coloured_button_style(512))
+            self.make_button(512)
         )
     }
 
@@ -158,6 +158,27 @@ impl RS2048 {
                 self.backend.shift(d)
             }
         };
+    }
+
+    pub fn keyboard_subscription(&self) -> Subscription<Message> {
+        keyboard::on_key_press(
+            |key, modifiers| -> Option<Message> {
+                return match key {
+                    keyboard::Key::Character(C) => match C.as_str() {
+                        "W" => Some(Message::Shift(ShiftDirection::Up)),
+                        "S" => Some(Message::Shift(ShiftDirection::Down)),
+                        "A" => Some(Message::Shift(ShiftDirection::Left)),
+                        "D" => Some(Message::Shift(ShiftDirection::Right)),
+                        _ => None
+                    }
+                    keyboard::Key::Named(keyboard::key::Named::ArrowUp) => Some(Message::Shift(ShiftDirection::Up)),
+                    keyboard::Key::Named(keyboard::key::Named::ArrowDown) => Some(Message::Shift(ShiftDirection::Down)),
+                    keyboard::Key::Named(keyboard::key::Named::ArrowLeft) => Some(Message::Shift(ShiftDirection::Left)),
+                    keyboard::Key::Named(keyboard::key::Named::ArrowRight) => Some(Message::Shift(ShiftDirection::Right)),
+                    _ => None
+                }
+            }
+        )
     }
 }
 

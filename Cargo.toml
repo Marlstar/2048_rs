@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 rand = "*"
+smol_str = "*"
 #itertools = "*"
 
 [dependencies.iced]
