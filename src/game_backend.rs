@@ -39,7 +39,7 @@ impl Backend { // Constructors
     }
 }
 
-impl Backend { // Cell Spawning
+impl Backend { // Cell Spawning & Checking
     fn empty_cells(&self) -> Vec<(usize, usize)> {
         let mut empty_cells: Vec<(usize, usize)> = vec![];
 
@@ -63,12 +63,37 @@ impl Backend { // Cell Spawning
         let (x, y) = chosen;
         self.grid[y][x] = [2, 4][rng.gen_range(0..=1)];
     }
+
+    fn alive(&self) -> bool {
+        // If there are empty cells then still alive
+        if !self.empty_cells().is_empty() {return true;}
+
+        for row in 0..3 {
+            for col in 0..3 {
+                // Horizontal
+                if self.grid[row][col] == self.grid[row][col+1] {return true;}
+
+                // Vertical
+                if self.grid[row][col] == self.grid[row+1][col] {return true;}
+            }
+        }
+        return false;
+    }
+
+    fn check_death(&mut self) {
+        if !self.alive() {self.die()}
+    }
+
+    fn die(&mut self) {
+        println!("you died!")
+    }
 }
 
 impl Backend { // Movement
     pub fn shift(&mut self, direction: ShiftDirection) {
         if self.merge(direction) {
             self.spawn();
+            self.check_death()
         }
     }
 
