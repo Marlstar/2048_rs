@@ -165,10 +165,10 @@ impl RS2048 {
             |key, modifiers| -> Option<Message> {
                 return match key {
                     keyboard::Key::Character(C) => match C.as_str() {
-                        "W" => Some(Message::Shift(ShiftDirection::Up)),
-                        "S" => Some(Message::Shift(ShiftDirection::Down)),
-                        "A" => Some(Message::Shift(ShiftDirection::Left)),
-                        "D" => Some(Message::Shift(ShiftDirection::Right)),
+                        "w" => Some(Message::Shift(ShiftDirection::Up)),
+                        "s" => Some(Message::Shift(ShiftDirection::Down)),
+                        "a" => Some(Message::Shift(ShiftDirection::Left)),
+                        "d" => Some(Message::Shift(ShiftDirection::Right)),
                         _ => None
                     }
                     keyboard::Key::Named(keyboard::key::Named::ArrowUp) => Some(Message::Shift(ShiftDirection::Up)),
